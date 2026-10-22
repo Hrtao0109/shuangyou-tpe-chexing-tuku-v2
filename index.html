@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>双优产品笔记 · 全部车型</title>
 <style>
 :root{
@@ -333,6 +336,26 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbo
 applyStaticText();
 renderBrandTags();
 render();
+
+/* ── 版本自愈：微信/浏览器会把整页（含内嵌 DATA）缓存住，导致改完口径扫码还是旧页面。
+   做法：页面自己记一个 PAGE_VER，另配一份 version.json，用 no-store 拉一次比对；
+   不一致就带 ?v=<新版本> 重载 —— URL 变了，客户端缓存必然失效。
+   这样以后扫码永远是当天最新的，不用教客户清缓存。 ── */
+(function(){
+  var PAGE_VER = '20261022-154201';
+  try{
+    fetch('version.json?t=' + Date.now(), {cache:'no-store'})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){
+        if (!j || !j.v || j.v === PAGE_VER) return;
+        var u = new URL(location.href);
+        if (u.searchParams.get('v') === j.v) return;      // 已经是新版，别再转圈
+        u.searchParams.set('v', j.v);
+        location.replace(u.toString());
+      })
+      .catch(function(){});
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
